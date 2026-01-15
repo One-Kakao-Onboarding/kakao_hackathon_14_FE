@@ -22,24 +22,58 @@ export default function SectionFilter() {
   const [isSticky, setIsSticky] = useState(false);
 
   useEffect(() => {
+    const checkActiveSection = () => {
+      // 각 섹션의 위치를 확인하여 가장 위에 있는 것을 active로 설정
+      const sections = filters.map((filter) => {
+        const element = document.getElementById(filter.id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          return {
+            id: filter.id,
+            top: rect.top,
+            bottom: rect.bottom,
+          };
+        }
+        return null;
+      }).filter(Boolean);
+
+      // viewport 상단에서 200px 아래에 있는 섹션 찾기
+      const headerOffset = 200;
+      const activeSection = sections.find(
+        (section) => section && section.top <= headerOffset && section.bottom > headerOffset
+      );
+
+      if (activeSection) {
+        setActiveFilter(activeSection.id);
+      }
+    };
+
     const handleScroll = () => {
       // Check if scrolled past hero section + carousel (approximately 850px)
       setIsSticky(window.scrollY > 850);
+      checkActiveSection();
     };
 
     // Intersection Observer to track active section
     const observerOptions = {
       root: null,
-      rootMargin: '-250px 0px -50% 0px',
-      threshold: 0,
+      rootMargin: '-200px 0px -40% 0px',
+      threshold: 0.1,
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveFilter(entry.target.id);
-        }
-      });
+      // 보이는 모든 섹션 중에서 가장 위에 있는 것을 선택
+      const visibleSections = entries
+        .filter((entry) => entry.isIntersecting)
+        .map((entry) => ({
+          id: entry.target.id,
+          top: entry.boundingClientRect.top,
+        }))
+        .sort((a, b) => a.top - b.top);
+
+      if (visibleSections.length > 0) {
+        setActiveFilter(visibleSections[0].id);
+      }
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);

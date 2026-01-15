@@ -1,78 +1,66 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import MychatItem from './MychatItem';
-
-const mockProjects = [
-  {
-    id: '1',
-    thumbnail: '🛋️',
-    title: '미니멀 원룸 프로젝트',
-    date: '2024.01.10',
-    tags: ['#미니멀', '#모던', '#무타공'],
-  },
-  {
-    id: '2',
-    thumbnail: '🪴',
-    title: '내추럴 우드톤 인테리어',
-    date: '2024.01.08',
-    tags: ['#우드', '#내추럴', '#식물'],
-  },
-  {
-    id: '3',
-    thumbnail: '🎨',
-    title: '컬러풀 스튜디오',
-    date: '2024.01.05',
-    tags: ['#컬러풀', '#레트로', '#개성'],
-  },
-  {
-    id: '4',
-    thumbnail: '💡',
-    title: '북유럽 감성 방',
-    date: '2024.01.03',
-    tags: ['#북유럽', '#심플', '#화이트'],
-  },
-  {
-    id: '5',
-    thumbnail: '🌙',
-    title: '다크 모던 인테리어',
-    date: '2023.12.28',
-    tags: ['#다크', '#모던', '#고급'],
-  },
-  {
-    id: '6',
-    thumbnail: '🌸',
-    title: '로맨틱 원룸',
-    date: '2023.12.25',
-    tags: ['#핑크', '#로맨틱', '#감성'],
-  },
-  {
-    id: '7',
-    thumbnail: '🏡',
-    title: '빈티지 감성 주방 리모델링',
-    date: '2023.12.20',
-    tags: ['#빈티지', '#주방', '#레트로'],
-  },
-  {
-    id: '8',
-    thumbnail: '✨',
-    title: '모던 럭셔리 침실',
-    date: '2023.12.15',
-    tags: ['#럭셔리', '#침실', '#모던'],
-  },
-];
+import { getRecentProjects } from '@/features/project-storage';
 
 export default function MychatList() {
+  const [projects, setProjects] = useState<Array<{
+    id: string;
+    thumbnail: string;
+    title: string;
+    date: string;
+    tags: string[];
+  }>>([]);
+
+  useEffect(() => {
+    // localStorage에서 최근 프로젝트 가져오기
+    const recentProjects = getRecentProjects(8);
+
+    // MychatItem에 맞게 데이터 변환
+    const formattedProjects = recentProjects.map(project => ({
+      id: project.id,
+      thumbnail: project.afterImage, // AI 결과 이미지를 썸네일로 사용
+      title: project.title,
+      date: new Date(project.createdAt).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\. /g, '.'),
+      tags: project.mood.map(m => `#${m}`),
+    }));
+
+    setProjects(formattedProjects);
+  }, []);
+
+  // 프로젝트가 없을 때
+  if (projects.length === 0) {
+    return (
+      <div className="mt-16">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">최근 프로젝트</h2>
+        </div>
+
+        <div className="text-center py-20 bg-gray-50 rounded-2xl">
+          <p className="text-gray-600 mb-4">아직 생성된 프로젝트가 없습니다</p>
+          <p className="text-sm text-gray-500">
+            AI 인테리어를 생성하고 프로젝트를 저장해보세요!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-16">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">최근 프로젝트</h2>
-        <button className="text-sm text-gray-600 hover:text-gray-900">
-          전체보기 →
-        </button>
+        <h2 className="text-2xl font-bold text-gray-900">
+          최근 프로젝트 <span className="text-blue-600">({projects.length})</span>
+        </h2>
       </div>
 
       <div className="grid grid-cols-4 gap-x-5 gap-y-10">
-        {mockProjects.map((project) => (
+        {projects.map((project) => (
           <MychatItem key={project.id} {...project} />
         ))}
       </div>

@@ -13,8 +13,12 @@ export default function MychatItem({ thumbnail, title, date, tags }: MychatItemP
     <div className="cmp_prd">
       <a href="#" className="block">
         {/* Thumbnail */}
-        <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-          <span className="text-5xl">{thumbnail}</span>
+        <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
+          <img
+            src={thumbnail}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* Product Info */}

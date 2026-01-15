@@ -34,7 +34,7 @@ export const useUserStore = create<UserState>((set) => ({
   // Initial state
   nickname: '조성훈',
   moods: ['modern', 'minimal'],
-  residenceType: '월세',
+  residenceType: 'monthly',
   budget: 3000000,
   moveInDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30일 후
 

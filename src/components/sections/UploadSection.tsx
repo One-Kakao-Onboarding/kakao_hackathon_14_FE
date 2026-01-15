@@ -5,8 +5,11 @@ import { Upload, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import EditCanvas from "./EditCanvas";
 
+type Step = "upload" | "edit";
+
 export default function UploadSection() {
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [step, setStep] = useState<Step>("upload");
+
   const {
     uploadedRoomImg,
     setUploadedRoomImg,
@@ -31,7 +34,7 @@ export default function UploadSection() {
           setCircles([]);
           setEditedImage(null);
           setCanvasSize(null);
-          setIsEditMode(false);
+          // setIsEditMode(false);
         };
         reader.readAsDataURL(file);
       }
@@ -44,15 +47,32 @@ export default function UploadSection() {
     setCircles([]);
     setEditedImage(null);
     setCanvasSize(null);
-    setIsEditMode(false);
+    setStep("upload");
   };
 
   const handleStartEdit = () => {
-    setIsEditMode(true);
+    setStep("edit");
   };
 
   const handleSaveEdit = () => {
-    setIsEditMode(false);
+    // 편집 완료 후 AI Result Section으로 스크롤
+    setStep("upload");
+
+    // 약간의 딜레이 후 스크롤 (DOM 업데이트 대기)
+    setTimeout(() => {
+      const aiResultSection = document.getElementById("ai-result");
+      if (aiResultSection) {
+        const rect = aiResultSection.getBoundingClientRect();
+        const scrollTop =
+          window.pageYOffset || document.documentElement.scrollTop;
+        const targetPosition = rect.top + scrollTop - 130;
+
+        window.scrollTo({
+          top: targetPosition,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   };
 
   return (
@@ -61,7 +81,8 @@ export default function UploadSection() {
         내 방 사진 업로드
       </h2>
 
-      {!isEditMode ? (
+      {/* Step: Upload & Preview */}
+      {step === "upload" && (
         <div className="grid grid-cols-2 gap-8">
           {/* Left: Upload/Preview */}
           <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-200">
@@ -196,8 +217,10 @@ export default function UploadSection() {
             </div>
           </div>
         </div>
-      ) : (
-        // Edit Mode - 2/3 Width
+      )}
+
+      {/* Step: Edit Canvas */}
+      {step === "edit" && (
         <div className="w-2/3 mx-auto">
           <EditCanvas onSaveEdit={handleSaveEdit} />
         </div>
