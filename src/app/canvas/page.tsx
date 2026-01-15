@@ -134,12 +134,17 @@ export default function CanvasPage() {
 
     const coords = getCanvasCoordinates(e);
     if (coords) {
+      // 시작점과 끝점의 중심을 원의 중심으로
+      const centerX = (startPoint.x + coords.x) / 2;
+      const centerY = (startPoint.y + coords.y) / 2;
+
+      // 시작점에서 끝점까지 거리의 절반을 반지름으로
       const radius = Math.sqrt(
         Math.pow(coords.x - startPoint.x, 2) + Math.pow(coords.y - startPoint.y, 2)
-      );
+      ) / 2;
 
       // 실시간으로 임시 동그라미 그리기
-      drawCanvas({ x: startPoint.x, y: startPoint.y, radius });
+      drawCanvas({ x: centerX, y: centerY, radius });
     }
   };
 
@@ -148,12 +153,17 @@ export default function CanvasPage() {
 
     const coords = getCanvasCoordinates(e);
     if (coords) {
+      // 시작점과 끝점의 중심을 원의 중심으로
+      const centerX = (startPoint.x + coords.x) / 2;
+      const centerY = (startPoint.y + coords.y) / 2;
+
+      // 시작점에서 끝점까지 거리의 절반을 반지름으로
       const radius = Math.sqrt(
         Math.pow(coords.x - startPoint.x, 2) + Math.pow(coords.y - startPoint.y, 2)
-      );
+      ) / 2;
 
-      if (radius > 10) {
-        setCircles([...circles, { x: startPoint.x, y: startPoint.y, radius }]);
+      if (radius > 5) {
+        setCircles([...circles, { x: centerX, y: centerY, radius }]);
       }
     }
 
