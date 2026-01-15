@@ -1,43 +1,66 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import MychatItem from './MychatItem';
-
-const mockProjects = [
-  {
-    id: '1',
-    thumbnail: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=400&fit=crop',
-    title: '모던 미니멀 원룸',
-    date: '2024.01.10',
-    tags: ['#미니멀', '#모던', '#무타공'],
-  },
-  {
-    id: '2',
-    thumbnail: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=400&fit=crop',
-    title: '내추럴 우드톤 인테리어',
-    date: '2024.01.08',
-    tags: ['#우드', '#내추럴', '#원목'],
-  },
-  {
-    id: '3',
-    thumbnail: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=400&fit=crop',
-    title: '빈티지 감성 인테리어',
-    date: '2024.01.05',
-    tags: ['#빈티지', '#레트로', '#감성'],
-  },
-];
+import { getRecentProjects } from '@/features/project-storage';
 
 export default function MychatList() {
+  const [projects, setProjects] = useState<Array<{
+    id: string;
+    thumbnail: string;
+    title: string;
+    date: string;
+    tags: string[];
+  }>>([]);
+
+  useEffect(() => {
+    // localStorage에서 최근 프로젝트 가져오기
+    const recentProjects = getRecentProjects(8);
+
+    // MychatItem에 맞게 데이터 변환
+    const formattedProjects = recentProjects.map(project => ({
+      id: project.id,
+      thumbnail: project.afterImage, // AI 결과 이미지를 썸네일로 사용
+      title: project.title,
+      date: new Date(project.createdAt).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\. /g, '.'),
+      tags: project.mood.map(m => `#${m}`),
+    }));
+
+    setProjects(formattedProjects);
+  }, []);
+
+  // 프로젝트가 없을 때
+  if (projects.length === 0) {
+    return (
+      <div className="mt-16">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">최근 프로젝트</h2>
+        </div>
+
+        <div className="text-center py-20 bg-gray-50 rounded-2xl">
+          <p className="text-gray-600 mb-4">아직 생성된 프로젝트가 없습니다</p>
+          <p className="text-sm text-gray-500">
+            AI 인테리어를 생성하고 프로젝트를 저장해보세요!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-16">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">최근 프로젝트</h2>
-        <button className="text-sm text-gray-600 hover:text-gray-900">
-          전체보기 →
-        </button>
+        <h2 className="text-2xl font-bold text-gray-900">
+          최근 프로젝트 <span className="text-blue-600">({projects.length})</span>
+        </h2>
       </div>
 
       <div className="grid grid-cols-4 gap-x-5 gap-y-10">
-        {mockProjects.map((project) => (
+        {projects.map((project) => (
           <MychatItem key={project.id} {...project} />
         ))}
       </div>

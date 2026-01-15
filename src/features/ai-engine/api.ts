@@ -20,6 +20,11 @@ export interface AiInteriorResponse {
   success: boolean;
   resultImageUrl?: string;
   message?: string;
+  editedImageBase64?: string;  // Before 이미지 (편집된 원본)
+  finalImageBase64?: string;   // After 이미지 (AI 생성 결과)
+  circle_info?: any;           // 선택된 영역 정보
+  background_mood?: any;       // 배경 무드 정보
+  recommended_products?: any[]; // 추천 상품 정보
 }
 
 /**

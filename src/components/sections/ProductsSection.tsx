@@ -1,14 +1,22 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Heart, ExternalLink } from 'lucide-react';
 import { MOCK_PRODUCTS, getRecommendedProducts } from '@/features/mock-products';
 import { useUserStore } from '@/store/useUserStore';
 
 export default function ProductsSection() {
   const { residenceType, moods } = useUserStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 사용자 맞춤 상품 추천
-  const displayProducts = getRecommendedProducts(moods, residenceType === '월세' ? 'monthly' : 'owned').slice(0, 8);
+  const displayProducts = mounted
+    ? getRecommendedProducts(moods, residenceType === '월세' ? 'monthly' : 'owned').slice(0, 8)
+    : MOCK_PRODUCTS.slice(0, 8);
 
   // 거주 형태에 따른 제목
   const getTitle = () => {

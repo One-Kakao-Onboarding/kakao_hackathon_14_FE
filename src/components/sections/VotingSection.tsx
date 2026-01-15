@@ -8,8 +8,11 @@ import VoteModal from '@/components/VoteModal';
 export default function VotingSection() {
   const [latestVote, setLatestVote] = useState<Vote | null>(null);
   const [showVoteModal, setShowVoteModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     // localStorage에서 가장 최근 투표 가져오기
     const voteIds = getMyVotes();
     if (voteIds.length > 0) {
@@ -19,6 +22,7 @@ export default function VotingSection() {
 
     // 3초마다 투표 결과 업데이트
     const interval = setInterval(() => {
+      const voteIds = getMyVotes();
       if (voteIds.length > 0) {
         const vote = getVote(voteIds[voteIds.length - 1]);
         setLatestVote(vote);
@@ -40,8 +44,8 @@ export default function VotingSection() {
     return `${baseUrl}?vote=${voteId}`;
   };
 
-  // 투표가 없을 때 기본 UI
-  if (!latestVote) {
+  // 마운트 전 또는 투표가 없을 때 기본 UI
+  if (!mounted || !latestVote) {
     return (
       <section id="voting" className="py-16">
         <div className="mb-8">

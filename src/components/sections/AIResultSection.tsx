@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Sparkles, Wand2, Check, MessageCircle } from "lucide-react";
+import { Loader2, Sparkles, Wand2, Check, MessageCircle, Save } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import { generateAiInterior } from "@/features/ai-engine/api";
 import { getRecommendedProducts, Product } from "@/features/mock-products";
 import { createVote, getShareUrl, Vote } from "@/features/vote-system";
 import VoteModal from "@/components/VoteModal";
+import { saveProject, AIResponse } from "@/features/project-storage";
 
 type Step = "idle" | "analyzing" | "settings" | "ready" | "result";
 
@@ -43,6 +44,8 @@ export default function AIResultSection() {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [currentVote, setCurrentVote] = useState<Vote | null>(null);
   const [showVoteModal, setShowVoteModal] = useState(false);
+  const [apiResponse, setApiResponse] = useState<AIResponse | null>(null);
+  const [projectSaved, setProjectSaved] = useState(false);
 
   const {
     uploadedRoomImg,
@@ -135,6 +138,33 @@ export default function AIResultSection() {
     setShowVoteModal(true);
   };
 
+  const handleSaveProject = () => {
+    if (!uploadedRoomImg || !aiResultImg || !apiResponse) {
+      alert('프로젝트 정보가 부족합니다');
+      return;
+    }
+
+    // 프로젝트 제목 생성 (무드 기반)
+    const moodLabels = selectedMoods
+      .map(id => MOOD_OPTIONS.find(m => m.id === id)?.label)
+      .filter(Boolean)
+      .join(' & ');
+    const title = `${moodLabels} 인테리어`;
+
+    // 프로젝트 저장
+    saveProject(
+      title,
+      uploadedRoomImg,
+      aiResultImg,
+      selectedMoods,
+      residenceType,
+      apiResponse
+    );
+
+    setProjectSaved(true);
+    alert('프로젝트가 저장되었습니다!');
+  };
+
   // 개발자 모드: AI 생성 완료 상태로 점프
   const handleDevMockResult = () => {
     // Mock 무드 & 주거 형태 설정
@@ -206,8 +236,22 @@ export default function AIResultSection() {
         circles: normalizedCircles,
       });
 
-      if (result.success && result.resultImageUrl) {
-        setAiResult(result.resultImageUrl);
+      if (result.success) {
+        // API 응답 저장
+        setApiResponse(result as any as AIResponse);
+
+        // Before 이미지: edited_image_base64가 있으면 사용, 없으면 기존 이미지
+        if (result.editedImageBase64) {
+          setUploadedRoomImg(`data:image/png;base64,${result.editedImageBase64}`);
+        }
+
+        // After 이미지: final_image_base64 사용
+        if (result.finalImageBase64) {
+          setAiResult(`data:image/png;base64,${result.finalImageBase64}`);
+        } else if (result.resultImageUrl) {
+          setAiResult(result.resultImageUrl);
+        }
+
         setStep("result");
       } else {
         setError(result.message || "AI 인테리어 생성에 실패했습니다.");
@@ -593,33 +637,59 @@ export default function AIResultSection() {
                 </p>
               </div>
 
-              {/* Regenerate Button */}
-              <button
-                onClick={handleGenerateAi}
-                disabled={isGenerating}
-                className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 size={24} className="animate-spin" />
-                    AI 생성 중...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={24} />
-                    다시 생성하기
-                  </>
-                )}
-              </button>
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {/* Save Project Button */}
+                <button
+                  onClick={handleSaveProject}
+                  disabled={projectSaved}
+                  className={`w-full px-6 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
+                    projectSaved
+                      ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {projectSaved ? (
+                    <>
+                      <Check size={20} />
+                      프로젝트 저장됨
+                    </>
+                  ) : (
+                    <>
+                      <Save size={20} />
+                      프로젝트 저장하기
+                    </>
+                  )}
+                </button>
 
-              {/* View Products Button */}
-              <button
-                onClick={handleViewProducts}
-                className="w-full px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold text-lg flex items-center justify-center gap-3"
+                {/* Regenerate Button */}
+                <button
+                  onClick={handleGenerateAi}
+                  disabled={isGenerating}
+                  className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Sparkles size={24} />
-                AI 추천 상품 보기
-              </button>
+                  {isGenerating ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      AI 생성 중...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 size={20} />
+                      다시 생성하기
+                    </>
+                  )}
+                </button>
+
+                {/* View Products Button */}
+                <button
+                  onClick={handleViewProducts}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-bold flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={20} />
+                  AI 추천 상품 보기
+                </button>
+              </div>
 
               {/* Back to Settings Button */}
               <button
