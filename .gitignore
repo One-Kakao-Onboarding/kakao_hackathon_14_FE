@@ -31,3 +31,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+kakao_interior_data_with_precalculated_mood.json

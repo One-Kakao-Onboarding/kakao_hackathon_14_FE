@@ -38,9 +38,7 @@ export default function AIResultSection() {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [recommendedMoods, setRecommendedMoods] = useState<string[]>([]);
-  const [residenceType, setResidenceType] = useState<string>("");
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [currentVote, setCurrentVote] = useState<Vote | null>(null);
@@ -52,8 +50,11 @@ export default function AIResultSection() {
     aiResultImg,
     circles,
     canvasSize,
+    moods: selectedMoods,
+    residenceType,
     setAiResult,
     setUploadedRoomImg,
+    setPersona,
   } = useUserStore();
 
   // editedImage가 업데이트되면 분석 시작
@@ -66,18 +67,17 @@ export default function AIResultSection() {
         const shuffled = [...MOOD_OPTIONS].sort(() => Math.random() - 0.5);
         const recommended = shuffled.slice(0, 3).map((m) => m.id);
         setRecommendedMoods(recommended);
-        setSelectedMoods(recommended);
+        setPersona({ moods: recommended });
         setStep("settings");
       }, 1500);
     }
   }, [editedImage, circles, step]);
 
   const handleMoodToggle = (moodId: string) => {
-    setSelectedMoods((prev) =>
-      prev.includes(moodId)
-        ? prev.filter((id) => id !== moodId)
-        : [...prev, moodId]
-    );
+    const newMoods = selectedMoods.includes(moodId)
+      ? selectedMoods.filter((id) => id !== moodId)
+      : [...selectedMoods, moodId];
+    setPersona({ moods: newMoods });
   };
 
   const handleProceedToGenerate = () => {
@@ -138,9 +138,11 @@ export default function AIResultSection() {
   // 개발자 모드: AI 생성 완료 상태로 점프
   const handleDevMockResult = () => {
     // Mock 무드 & 주거 형태 설정
-    setSelectedMoods(["modern", "minimal"]);
+    setPersona({
+      moods: ["modern", "minimal"],
+      residenceType: "monthly"
+    });
     setRecommendedMoods(["modern", "minimal", "wood"]);
-    setResidenceType("monthly");
 
     // Mock 원본 이미지 (Before)
     setUploadedRoomImg(
@@ -308,7 +310,7 @@ export default function AIResultSection() {
               {RESIDENCE_TYPES.map((type) => (
                 <button
                   key={type.id}
-                  onClick={() => setResidenceType(type.id)}
+                  onClick={() => setPersona({ residenceType: type.id })}
                   className={`p-6 rounded-xl border-2 transition-all text-left ${
                     residenceType === type.id
                       ? "border-blue-500 bg-blue-50"
