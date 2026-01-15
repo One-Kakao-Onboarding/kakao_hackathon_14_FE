@@ -1,0 +1,54 @@
+:root {
+  --primary-bg: #ffffff;
+  --secondary-bg: #f9f9f9;
+  --primary-gray: #191919;
+  --secondary-gray: #666666;
+  --tertiary-gray: #999999;
+  --quaternary-gray: #cccccc;
+
+  --header-height: 5rem;
+  --layout-max-width: 1280px;
+  --layout-padding-inline: 0;
+
+  /* Kakao Gift Colors */
+  --kakao-blue: #4684e9;
+  --kakao-yellow: #fee500;
+  --primary-200: #88d9f8;
+  --primary-300: #5dcaf5;
+  --primary-400: #27b3f4;
+  --primary-500: #1a91d1;
+  --highlight: #afd87c;
+
+  --font-heading: "Pretendard Variable", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: "Pretendard Variable", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-light: 300;
+  --font-medium: 500;
+  --font-bold: 700;
+
+  /* Kakao Gift Typography - PC */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.1875rem; /* 35px */
+  --text-5xl: 2.75rem;
+  --text-6xl: 3rem;
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+  --leading-kakao-title: 3.125rem; /* 50px */
+}
+
+.dark {
+  --primary-bg: #101828;
+  --secondary-bg: #191c23;
+  --primary-gray: #ffffff;
+  --secondary-gray: #f2f4f7;
+  --tertiary-gray: #e4e7ec;
+  --quaternary-gray: #d0d5dd;
+}

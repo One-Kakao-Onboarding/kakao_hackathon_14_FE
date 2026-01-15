@@ -1,7 +1,12 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
 
-export interface UserState {
+interface Circle {
+  x: number;
+  y: number;
+  radius: number;
+}
+
+interface UserState {
   // Onboarding & Persona
   nickname: string;
   moods: string[]; // 취향 (modern, wood 등)
@@ -11,59 +16,53 @@ export interface UserState {
 
   // AI Canvas
   uploadedRoomImg: string | null;
+  editedImage: string | null;
   aiResultImg: string | null;
+  circles: Circle[];
+  canvasSize: { width: number; height: number } | null;
 
   // Actions
   setPersona: (data: Partial<UserState>) => void;
-  setMoods: (moods: string[]) => void;
-  setResidenceType: (type: string) => void;
-  setBudget: (budget: number) => void;
-  setMoveInDate: (date: Date | null) => void;
   setUploadedRoomImg: (img: string | null) => void;
+  setEditedImage: (img: string | null) => void;
+  setCircles: (circles: Circle[]) => void;
+  setCanvasSize: (size: { width: number; height: number } | null) => void;
   setAiResult: (img: string) => void;
-  resetState: () => void;
 }
 
-const initialState = {
-  nickname: "",
-  moods: [],
-  residenceType: "",
-  budget: 0,
-  moveInDate: null,
+export const useUserStore = create<UserState>((set) => ({
+  // Initial state
+  nickname: '조성훈',
+  moods: ['modern', 'minimal'],
+  residenceType: '월세',
+  budget: 3000000,
+  moveInDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30일 후
+
   uploadedRoomImg: null,
+  editedImage: null,
   aiResultImg: null,
-};
+  circles: [],
+  canvasSize: null,
 
-export const useUserStore = create<UserState>()(
-  persist(
-    (set) => ({
-      ...initialState,
+  // Actions
+  setPersona: (data) =>
+    set((state) => ({
+      ...state,
+      ...data,
+    })),
 
-      setPersona: (data) => set((state) => ({ ...state, ...data })),
+  setUploadedRoomImg: (img) =>
+    set({ uploadedRoomImg: img }),
 
-      setMoods: (moods) => set({ moods }),
+  setEditedImage: (img) =>
+    set({ editedImage: img }),
 
-      setResidenceType: (type) => set({ residenceType: type }),
+  setCircles: (circles) =>
+    set({ circles }),
 
-      setBudget: (budget) => set({ budget }),
+  setCanvasSize: (size) =>
+    set({ canvasSize: size }),
 
-      setMoveInDate: (date) => set({ moveInDate: date }),
-
-      setUploadedRoomImg: (img) => set({ uploadedRoomImg: img }),
-
-      setAiResult: (img) => set({ aiResultImg: img }),
-
-      resetState: () => set(initialState),
-    }),
-    {
-      name: "kakao-homes-storage",
-      partialize: (state) => ({
-        nickname: state.nickname,
-        moods: state.moods,
-        residenceType: state.residenceType,
-        budget: state.budget,
-        moveInDate: state.moveInDate,
-      }),
-    }
-  )
-);
+  setAiResult: (img) =>
+    set({ aiResultImg: img }),
+}));

@@ -18,7 +18,8 @@ An AI-powered interior design platform for single-person households that combine
 - **Icons**: Lucide React Icons
 - **State Management**: Zustand (global store in `store/useUserStore.ts`)
 - **Animation**: Framer Motion (funnel transition effects)
-- **Design Constraint**: Mobile-First Desktop (max-w-[450px] center container)
+- **Design Constraint**: Desktop-First Responsive (Sidebar 280px + Main Content)
+- **Design Style**: Figma/Notion 스타일 다크 테마 SaaS UI
 
 ## Architecture
 
@@ -27,8 +28,9 @@ An AI-powered interior design platform for single-person households that combine
 ```
 src/
 ├── app/
-│   ├── layout.tsx              # Root layout with bottom navigation
-│   ├── home/                   # Home screen (D-Day widget, personalized feed)
+│   ├── layout.tsx              # Root layout with DesktopLayout
+│   ├── globals.css             # Design tokens & dark theme
+│   ├── home/                   # Home screen (MyroomContainer, MychatList)
 │   ├── canvas/                 # AI Canvas (3-step funnel: upload → settings → results)
 │   ├── social/                 # Social feed (sharing, voting, community)
 │   └── my/                     # My Room (profile, delivery, checklist)
@@ -82,12 +84,18 @@ interface UserState {
 - Social voting mechanism (Design A vs B)
 - Desktop mockup of Kakao Talk chat UI
 
-## App Structure (Bottom Navigation)
+## App Structure (Sidebar Navigation)
+
+### Sidebar Components
+- **User Profile**: Avatar, displayName, email
+- **Navigation**: 홈, AI 캔버스, 소셜, 마이 페이지
+- **D-Day Widget**: 이사 예정일 카운트다운
+- **AI CTA Button**: AI 인테리어 시작하기
+- **Logout**: 로그아웃 버튼
 
 ### 1. Home (`/home`)
-- **D-Day Widget**: Calculates days until moving date from `useUserStore.moveInDate`
-- **Personalized Feed**: Infinite scroll of interior references matching user's selected moods
-- **Recent Projects**: Summary cards of user's recent AI canvas work
+- **MyroomContainer**: 방 도면/이미지 + AI 캔버스 CTA
+- **MychatList**: 최근 프로젝트 그리드 (MychatItem 카드)
 
 ### 2. AI Canvas (`/canvas`) - Core Wow Point
 - **3-Step Funnel** (use Steppers/Tabs):

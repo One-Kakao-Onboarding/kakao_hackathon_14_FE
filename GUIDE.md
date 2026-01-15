@@ -9,7 +9,8 @@
 - **Styling**: Tailwind CSS + shadcn/ui (Lucide React Icons)
 - **State Management**: **Zustand** (Onboarding 데이터 및 AI 결과 전역 관리)
 - **Animation**: Framer Motion (퍼널 전환 효과용)
-- **Layout Strategy**: Mobile-First Desktop (Center 컨테이너: `max-w-[450px]`)
+- **Layout Strategy**: Desktop-First Responsive (Sidebar 280px + Main Content)
+- **Design Style**: Figma/Notion 스타일 다크 테마 SaaS UI
 
 ## 2. 프로젝트 아키텍처 (Feature-based Slice)
 
@@ -20,15 +21,23 @@
 - `src/store`: 전역 상태 관리 (`useUserStore.ts`)
 - `src/components/ui`: shadcn/ui 컴포넌트
 
-## 3. 바텀 네비게이션 및 화면별 기능 상세
+## 3. 사이드바 네비게이션 및 화면별 기능 상세
+
+### 📌 Sidebar 구조
+
+- **User Profile**: 아바타, displayName, email
+- **Navigation**: 홈, AI 캔버스, 소셜, 마이 페이지
+- **D-Day Widget**: 이사 예정일 카운트다운 (glass 스타일)
+- **AI CTA**: AI 인테리어 시작하기 버튼 (gradient-primary)
+- **Logout**: 로그아웃
 
 ### 🏠 1. 홈 (Home)
 
 - **위치**: `/home`
 - **핵심 요소**:
-- **이사 D-Day 위젯**: `useUserStore`의 이사 예정일을 계산해 "이사까지 D-14" 표시.
-- **취향 맞춤 피드**: 유저가 선택한 무드에 맞는 인테리어 레퍼런스 무한 스크롤.
-- **최근 시안**: 유저가 AI 캔버스에서 작업 중인 최근 프로젝트 요약 카드.
+- **MyroomContainer**: 방 도면/이미지 + AI 캔버스 CTA 텍스트 + 시작 버튼
+- **MychatList**: 최근 프로젝트 그리드 (MychatItem 카드)
+- **MychatItem**: 썸네일 + Title + Date + Tags
 
 ### 🎨 2. AI 캔버스 (AI Canvas) - **Core Wow Point**
 
