@@ -1,72 +1,41 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { MobileContainer } from "@/components/layout/MobileContainer";
 import { useUserStore } from "@/store/useUserStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
-  ImageIcon,
-  Settings2,
-  Sparkles,
   Check,
   ArrowRight,
   Camera,
-  Palette,
-  Zap,
-  AlertCircle,
+  Edit3,
+  Eye,
+  Trash2,
 } from "lucide-react";
 
-const moodOptions = [
-  { id: "minimal", label: "미니멀", emoji: "🤍" },
-  { id: "modern", label: "모던", emoji: "⬛" },
-  { id: "wood", label: "우드톤", emoji: "🪵" },
-  { id: "vintage", label: "빈티지", emoji: "🏺" },
-  { id: "nordic", label: "북유럽", emoji: "🧊" },
-  { id: "cozy", label: "코지", emoji: "🧸" },
-  { id: "industrial", label: "인더스트리얼", emoji: "🔩" },
-  { id: "natural", label: "내추럴", emoji: "🌿" },
-];
+type Step = "upload" | "edit" | "results";
 
-const presetStyles = [
-  {
-    id: "style1",
-    name: "모던 화이트",
-    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop",
-  },
-  {
-    id: "style2",
-    name: "우드 내추럴",
-    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop",
-  },
-  {
-    id: "style3",
-    name: "미니멀 그레이",
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-  },
-];
-
-type Step = "upload" | "settings" | "results";
+interface Circle {
+  x: number;
+  y: number;
+  radius: number;
+}
 
 export default function CanvasPage() {
   const [currentStep, setCurrentStep] = useState<Step>("upload");
-  const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
-  const [sliderValue, setSliderValue] = useState([50]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [circles, setCircles] = useState<Circle[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
+  const [editedImage, setEditedImage] = useState<string | null>(null);
 
-  const {
-    uploadedRoomImg,
-    setUploadedRoomImg,
-    aiResultImg,
-    setAiResult,
-    residenceType,
-  } = useUserStore();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  const { uploadedRoomImg, setUploadedRoomImg } = useUserStore();
 
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +44,8 @@ export default function CanvasPage() {
         const reader = new FileReader();
         reader.onloadend = () => {
           setUploadedRoomImg(reader.result as string);
+          setCircles([]);
+          setEditedImage(null);
         };
         reader.readAsDataURL(file);
       }
@@ -82,28 +53,99 @@ export default function CanvasPage() {
     [setUploadedRoomImg]
   );
 
-  const handleMoodToggle = (moodId: string) => {
-    setSelectedMoods((prev) =>
-      prev.includes(moodId)
-        ? prev.filter((m) => m !== moodId)
-        : prev.length < 3
-        ? [...prev, moodId]
-        : prev
-    );
+  // Canvas에 이미지와 동그라미 그리기
+  const drawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    const image = imageRef.current;
+    if (!canvas || !image) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // 캔버스 크기 설정
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+
+    // 이미지 그리기
+    ctx.drawImage(image, 0, 0);
+
+    // 동그라미 그리기
+    circles.forEach((circle) => {
+      ctx.beginPath();
+      ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    });
+  }, [circles]);
+
+  // 이미지 로드 시 Canvas 그리기
+  useEffect(() => {
+    if (imageRef.current && imageRef.current.complete) {
+      drawCanvas();
+    }
+  }, [circles, drawCanvas]);
+
+  // 마우스/터치 좌표 가져오기
+  const getCanvasCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    let clientX, clientY;
+    if ("touches" in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
   };
 
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    // AI 생성 시뮬레이션
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    
-    // 선택한 프리셋 또는 기본 이미지로 결과 설정
-    const resultImage = selectedPreset 
-      ? presetStyles.find(p => p.id === selectedPreset)?.image 
-      : "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&h=600&fit=crop";
-    
-    setAiResult(resultImage || "");
-    setIsGenerating(false);
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    const coords = getCanvasCoordinates(e);
+    if (coords) {
+      setIsDrawing(true);
+      setStartPoint(coords);
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing || !startPoint) return;
+
+    const coords = getCanvasCoordinates(e);
+    if (coords) {
+      const radius = Math.sqrt(
+        Math.pow(coords.x - startPoint.x, 2) + Math.pow(coords.y - startPoint.y, 2)
+      );
+
+      if (radius > 10) {
+        setCircles([...circles, { x: startPoint.x, y: startPoint.y, radius }]);
+      }
+    }
+
+    setIsDrawing(false);
+    setStartPoint(null);
+  };
+
+  const handleClearCircles = () => {
+    setCircles([]);
+  };
+
+  const handleSaveEdit = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dataUrl = canvas.toDataURL("image/png");
+    setEditedImage(dataUrl);
     setCurrentStep("results");
   };
 
@@ -126,15 +168,15 @@ export default function CanvasPage() {
         <div className="flex items-center justify-between px-2">
           {[
             { step: "upload", icon: Camera, label: "업로드" },
-            { step: "settings", icon: Settings2, label: "설정" },
-            { step: "results", icon: Sparkles, label: "결과" },
+            { step: "edit", icon: Edit3, label: "편집" },
+            { step: "results", icon: Eye, label: "결과" },
           ].map((item, index) => {
             const Icon = item.icon;
             const isActive = currentStep === item.step;
             const isPast =
-              (currentStep === "settings" && item.step === "upload") ||
+              (currentStep === "edit" && item.step === "upload") ||
               (currentStep === "results" &&
-                (item.step === "upload" || item.step === "settings"));
+                (item.step === "upload" || item.step === "edit"));
 
             return (
               <div key={item.step} className="flex items-center">
@@ -225,7 +267,7 @@ export default function CanvasPage() {
               <Button
                 className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 h-12 text-base font-medium"
                 disabled={!uploadedRoomImg}
-                onClick={() => setCurrentStep("settings")}
+                onClick={() => setCurrentStep("edit")}
               >
                 다음 단계로
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -233,115 +275,58 @@ export default function CanvasPage() {
             </motion.div>
           )}
 
-          {currentStep === "settings" && (
+          {currentStep === "edit" && (
             <motion.div
-              key="settings"
+              key="edit"
               variants={stepVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
               transition={{ duration: 0.3 }}
-              className="space-y-6"
+              className="space-y-4"
             >
-              {/* Residence Type Notice */}
-              {residenceType === "월세" && (
-                <Card className="bg-amber-50 border-amber-200">
-                  <CardContent className="p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-amber-800">
-                        월세 거주자를 위한 맞춤 추천
-                      </p>
-                      <p className="text-xs text-amber-600 mt-1">
-                        무타공 상품 위주로 구성됩니다
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Mood Selection */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Palette className="w-5 h-5 text-violet-500" />
-                  <h3 className="font-semibold text-zinc-900">스타일 선택</h3>
-                  <span className="text-xs text-zinc-400">(최대 3개)</span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {moodOptions.map((mood) => (
-                    <button
-                      key={mood.id}
-                      onClick={() => handleMoodToggle(mood.id)}
-                      className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                        selectedMoods.includes(mood.id)
-                          ? "border-violet-500 bg-violet-50"
-                          : "border-zinc-100 bg-white hover:border-zinc-200"
-                      }`}
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-zinc-900">이미지 편집</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearCircles}
+                      disabled={circles.length === 0}
                     >
-                      <span className="text-xl">{mood.emoji}</span>
-                      <p className="text-xs text-zinc-600 mt-1 truncate">{mood.label}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Style Intensity */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-violet-500" />
-                    <h3 className="font-semibold text-zinc-900">변화 강도</h3>
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      초기화
+                    </Button>
                   </div>
-                  <span className="text-sm text-violet-600 font-medium">{sliderValue}%</span>
-                </div>
-                <Slider
-                  value={sliderValue}
-                  onValueChange={setSliderValue}
-                  max={100}
-                  step={10}
-                  className="w-full"
-                />
-                <div className="flex justify-between mt-2">
-                  <span className="text-xs text-zinc-400">자연스럽게</span>
-                  <span className="text-xs text-zinc-400">과감하게</span>
-                </div>
-              </div>
+                  <p className="text-sm text-zinc-500">
+                    드래그하여 빨간 동그라미를 그려주세요
+                  </p>
 
-              {/* Preset Styles */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <ImageIcon className="w-5 h-5 text-violet-500" />
-                  <h3 className="font-semibold text-zinc-900">스타일 프리셋</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {presetStyles.map((preset) => (
-                    <button
-                      key={preset.id}
-                      onClick={() => setSelectedPreset(preset.id)}
-                      className={`relative rounded-xl overflow-hidden aspect-square border-2 transition-all ${
-                        selectedPreset === preset.id
-                          ? "border-violet-500 ring-2 ring-violet-200"
-                          : "border-transparent"
-                      }`}
-                    >
-                      <img
-                        src={preset.image}
-                        alt={preset.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <span className="absolute bottom-2 left-2 text-xs text-white font-medium">
-                        {preset.name}
-                      </span>
-                      {selectedPreset === preset.id && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {/* Canvas Container */}
+                  <div className="relative bg-zinc-50 rounded-lg overflow-hidden">
+                    <img
+                      ref={imageRef}
+                      src={uploadedRoomImg || ""}
+                      alt="Room"
+                      className="hidden"
+                      onLoad={drawCanvas}
+                    />
+                    <canvas
+                      ref={canvasRef}
+                      className="w-full h-auto cursor-crosshair"
+                      onMouseDown={handleMouseDown}
+                      onMouseUp={handleMouseUp}
+                      onTouchStart={handleMouseDown}
+                      onTouchEnd={handleMouseUp}
+                    />
+                  </div>
+
+                  <div className="text-xs text-zinc-400 text-center">
+                    {circles.length}개의 동그라미가 그려졌습니다
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="flex gap-3">
                 <Button
@@ -353,25 +338,10 @@ export default function CanvasPage() {
                 </Button>
                 <Button
                   className="flex-[2] bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 h-12 text-base font-medium"
-                  onClick={handleGenerate}
-                  disabled={selectedMoods.length === 0 && !selectedPreset}
+                  onClick={handleSaveEdit}
                 >
-                  {isGenerating ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                      >
-                        <Sparkles className="w-5 h-5 mr-2" />
-                      </motion.div>
-                      생성 중...
-                    </>
-                  ) : (
-                    <>
-                      AI로 변신하기
-                      <Sparkles className="w-5 h-5 ml-2" />
-                    </>
-                  )}
+                  편집 완료
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
             </motion.div>
@@ -396,13 +366,13 @@ export default function CanvasPage() {
                         value="before"
                         className="rounded-none data-[state=active]:bg-white data-[state=active]:shadow-none"
                       >
-                        Before
+                        원본
                       </TabsTrigger>
                       <TabsTrigger
                         value="after"
                         className="rounded-none data-[state=active]:bg-white data-[state=active]:shadow-none"
                       >
-                        After ✨
+                        편집본
                       </TabsTrigger>
                     </TabsList>
                     <TabsContent value="before" className="m-0">
@@ -414,7 +384,7 @@ export default function CanvasPage() {
                     </TabsContent>
                     <TabsContent value="after" className="m-0">
                       <img
-                        src={aiResultImg || ""}
+                        src={editedImage || uploadedRoomImg || ""}
                         alt="After"
                         className="w-full aspect-[4/3] object-cover"
                       />
@@ -423,38 +393,33 @@ export default function CanvasPage() {
                 </CardContent>
               </Card>
 
-              {/* Selected Moods */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-zinc-500">적용된 스타일:</span>
-                {selectedMoods.map((moodId) => {
-                  const mood = moodOptions.find((m) => m.id === moodId);
-                  return (
-                    <Badge key={moodId} variant="secondary" className="bg-violet-100 text-violet-700">
-                      {mood?.emoji} {mood?.label}
-                    </Badge>
-                  );
-                })}
+              {/* Info */}
+              <div className="text-center text-sm text-zinc-500">
+                총 {circles.length}개의 동그라미가 표시되었습니다
               </div>
 
               {/* Actions */}
               <div className="space-y-3">
-                <Button className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 h-12 text-base font-medium">
-                  카카오톡으로 공유하기
+                <Button
+                  variant="outline"
+                  className="w-full h-12"
+                  onClick={() => {
+                    setCurrentStep("edit");
+                  }}
+                >
+                  다시 편집하기
                 </Button>
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-12"
-                    onClick={() => {
-                      setCurrentStep("settings");
-                    }}
-                  >
-                    다시 생성
-                  </Button>
-                  <Button variant="outline" className="flex-1 h-12">
-                    저장하기
-                  </Button>
-                </div>
+                <Button
+                  className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 h-12 text-base font-medium"
+                  onClick={() => {
+                    setCurrentStep("upload");
+                    setUploadedRoomImg(null);
+                    setCircles([]);
+                    setEditedImage(null);
+                  }}
+                >
+                  새로 시작하기
+                </Button>
               </div>
             </motion.div>
           )}
