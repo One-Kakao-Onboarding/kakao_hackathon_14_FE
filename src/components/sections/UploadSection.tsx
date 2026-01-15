@@ -34,7 +34,7 @@ export default function UploadSection() {
           setCircles([]);
           setEditedImage(null);
           setCanvasSize(null);
-          setIsEditMode(false);
+          // setIsEditMode(false);
         };
         reader.readAsDataURL(file);
       }

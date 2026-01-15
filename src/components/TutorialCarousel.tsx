@@ -9,7 +9,7 @@ const slides = [
     step: 'STEP 1',
     title: '방 사진을 업로드하고\nAI가 재해석한 인테리어를 확인하세요!',
     description: '사진 한 장으로 시작하는\n나만의 인테리어 디자인',
-    emoji: '📸',
+    image: '/tutorial-1.png',
     color: 'from-blue-100 to-purple-100',
   },
   {
@@ -17,7 +17,7 @@ const slides = [
     step: 'STEP 2',
     title: '월세 거주자를 위한\n무타공 가구 추천!',
     description: '주거 형태에 맞춘\n맞춤형 상품 큐레이션',
-    emoji: '🛋️',
+    image: '/tutorial-2.png',
     color: 'from-green-100 to-blue-100',
   },
   {
@@ -25,7 +25,7 @@ const slides = [
     step: 'STEP 3',
     title: '친구들에게 투표를 받고\n최종 디자인을 결정하세요!',
     description: '카카오톡으로 공유하고\n의견을 받아보세요',
-    emoji: '💬',
+    image: '/tutorial-3.png',
     color: 'from-yellow-100 to-orange-100',
   },
   {
@@ -33,7 +33,7 @@ const slides = [
     step: 'STEP 4',
     title: '이사일에 맞춰\n통합 배송으로 한 번에!',
     description: '선택한 가구들을\n이사일에 일괄 배송',
-    emoji: '🚚',
+    image: '/tutorial-4.png',
     color: 'from-pink-100 to-red-100',
   },
 ];
@@ -90,8 +90,12 @@ export default function TutorialCarousel() {
 
                   {/* Right Illustration */}
                   <div className="flex-shrink-0 ml-16">
-                    <div className="w-80 h-80 bg-white/50 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-lg">
-                      <span className="text-9xl">{slide.emoji}</span>
+                    <div className="w-80 h-80 rounded-3xl overflow-hidden shadow-lg">
+                      <img
+                        src={slide.image}
+                        alt={slide.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </div>
                 </div>
