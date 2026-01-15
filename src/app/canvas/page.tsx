@@ -166,7 +166,8 @@ export default function CanvasPage() {
       ) / 2;
 
       if (radius > 5) {
-        setCircles([...circles, { x: centerX, y: centerY, radius }]);
+        // 기존 동그라미를 덮어쓰기 (최대 1개만 유지)
+        setCircles([{ x: centerX, y: centerY, radius }]);
       }
     }
 
@@ -363,7 +364,7 @@ export default function CanvasPage() {
                     </Button>
                   </div>
                   <p className="text-sm text-zinc-500">
-                    드래그하여 빨간 동그라미를 그려주세요
+                    드래그하여 변경할 영역을 선택해주세요 (1개만 가능)
                   </p>
 
                   {/* Canvas Container */}
@@ -388,7 +389,7 @@ export default function CanvasPage() {
                   </div>
 
                   <div className="text-xs text-zinc-400 text-center">
-                    {circles.length}개의 동그라미가 그려졌습니다
+                    {circles.length > 0 ? "영역이 선택되었습니다" : "영역을 선택해주세요"}
                   </div>
                 </CardContent>
               </Card>
@@ -460,7 +461,7 @@ export default function CanvasPage() {
 
               {/* Info */}
               <div className="text-center text-sm text-zinc-500">
-                총 {circles.length}개의 동그라미가 표시되었습니다
+                {circles.length > 0 ? "선택된 영역이 표시되어 있습니다" : "영역이 선택되지 않았습니다"}
               </div>
 
               {/* Actions */}
